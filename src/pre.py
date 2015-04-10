@@ -2,7 +2,9 @@
 
 import os
 
-from config import TRAIN_USER, TRAIN_USER_SORTED, TRAIN_USER_SAMPLES, ANSWER_SAMPLES
+from config import TRAIN_USER, TRAIN_ITEM, TRAIN_USER_SORTED,\
+    TRAIN_USER_SAMPLES, LABEL_SAMPLES, ANSWER_SAMPLES,\
+    TRAN_USER_OFFLINE, LABEL_OFFLINE, ANSWER_OFFLINE
 from utils import read_from_csv, write_to_csv, sort_raw_data
 
 # 根据用户名、时间对原始数据集进行排序
@@ -26,7 +28,7 @@ def gen_offline(path_in, path_new_data, path_result):
 # 获取一个文件中所有的用户名
 def users_of_file(path):
     (head, users) = read_from_csv(path, 
-        func=lambda x: x.strip().split(',')[0]
+        func=lambda x: x.split(',')[0]
     )
     return set(users)
 
@@ -59,28 +61,55 @@ def sample_users(n, path_in, path_train, path_result, user_count=10000):
     for f in f_train + f_res:
         f.close()
 
+# 获取目标Item子集
+def retrieve_item_ids():
+    (head, items) = read_from_csv(TRAIN_ITEM,
+        func=lambda x: x.split(',')[0]
+    )
+    return set(items)
 
-
+# 统计给定文件中的曾经发生过购买的user-item对，并去重后保存
+def label_to_ans(path_label, path_ans):
+    items = retrieve_item_ids()
+    pairs = set()
+    with open(path_label, 'r') as f_label:
+        for line in f_label:
+            if line.startswith('user'):
+                continue
+            l = line.split(',')
+            if l[2] == '4' and l[1] in items:
+                pairs.add(','.join(l[:2]))
+    write_to_csv(path_ans, 'user_id,item_id', pairs, func=lambda x: x + '\n')
 
 
 import sys
 
+SAMPLE_N = 10
+
 def _help():
     print """
     -h\tFor help messages
+    -a\tCast label datasets to answers
     -c\tCount users in the original train user dataset
     -s\tSort the original train user dataset by userid and time
     -S\tSample the sorted train user dataset to 10 small dataset, each contains 1000 user
     """
 
 def _sample():
-    sample_users(1000, TRAIN_USER_SORTED, TRAIN_USER_SAMPLES, ANSWER_SAMPLES)
+    sample_users(10000/SAMPLE_N, TRAIN_USER_SORTED, TRAIN_USER_SAMPLES, LABEL_SAMPLES)
+    gen_offline(TRAIN_USER_SORTED, TRAN_USER_OFFLINE, LABEL_OFFLINE)
 
 def _count():
     print len(users_of_file(TRAIN_USER_SORTED))
 
+def _answer():
+    for i in range(0, SAMPLE_N):
+        label_to_ans(LABEL_SAMPLES % i, ANSWER_SAMPLES % i)
+    label_to_ans(LABEL_OFFLINE, ANSWER_OFFLINE)
+
 switches = {
     '-h': _help,
+    '-a': _answer,
     '-c': _count,
     '-s': sort_train_user,
     '-S': _sample,
@@ -89,5 +118,5 @@ switches = {
 
 if len(sys.argv) == 2:
     arg = sys.argv[1]
-    f = switches.get(arg, '-h')
+    f = switches.get(arg, _help)
     f()

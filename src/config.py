@@ -15,12 +15,13 @@ TRAIN_USER_SORTED = '../data/tianchi_mobile_recommend_train_user_sorted.csv'
 
 # 线下调试模型所用的原始训练集和结果集
 TRAN_USER_OFFLINE = '../data/offline/train_user.csv'
+LABEL_OFFLINE = '../data/offline/label.csv'
 ANSWER_OFFLINE = '../data/offline/answer.csv'
 
 # 小样本文件名
 TRAIN_USER_SAMPLES = '../data/offline/samples/train_user_%d.csv'
+LABEL_SAMPLES = '../data/offline/samples/label_%d.csv'
 ANSWER_SAMPLES = '../data/offline/samples/answer_%d.csv'
-
 
 
 

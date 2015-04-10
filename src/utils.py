@@ -11,11 +11,11 @@ def read_from_csv(path, func=lambda x: x.strip().split(',')):
             res.append(func(line))
     return (head, res)
 
-def write_to_csv(path, head, data):
+def write_to_csv(path, head, data, func=lambda x: ','.join(x) + '\n'):
     with open(path, 'w') as f:
-        f.write(','.join(head) + '\n')
+        f.write(func(head))
         for d in data:
-            f.write(','.join(d) + '\n')
+            f.write(func(d))
 
 # 以answers为准计算predicts的F1值
 def compute_f1(predicts, answers):
