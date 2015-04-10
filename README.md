@@ -13,6 +13,10 @@ Fresh man for data process
 ## 功能
 数据预处理，包括排序、采样
 
+## 相关下载链接
+
+排序版用户行为数据从[百度网盘](http://pan.baidu.com/s/1pJkLfTL)下载，密码`te8k`。
+
 ## 使用方法
 ### 准备工作
 建立必要的目录
@@ -23,6 +27,7 @@ python config.py
 
 将原始的两个数据文件置于data目录下；如果曾经修改过文件名，请自行对config.py进行修改。
 
+因为对原始文件排序并没有任何优化，会吃掉5G内存，机器消瘦的童鞋请从[百度网盘](http://pan.baidu.com/s/1pJkLfTL)下载，密码`te8k`。
 
 ### 功能列表
 
