@@ -31,23 +31,24 @@ def users_of_file(path):
     return set(users)
 
 # 将已经排序的样本按照每n条记录为一个样本分为几个小样本
-def sample_users(n, path_in, path_train, path_result):
+def sample_users(n, path_in, path_train, path_result, user_count=10000):
     from math import ceil
-    sample_count = ceil(len(users_of_file(path_in))/float(n))
-    pre_uid = '-------'
-    cur_count = -1
+    sample_count = int(ceil(user_count/float(n)))
+    pre_uid = '0000000000000000'
+    cur_count = -2
     f_train = map(lambda x: open(path_train % x, 'w'), range(0, sample_count))
     f_res = map(lambda x: open(path_result % x, 'w'), range(0, sample_count))
     with open(path_in, 'r') as fin:
         for line in fin:
             # 第一行是表头
-            if cur_count == -1:
+            if cur_count == -2:
+                cur_count += 1
                 for f in f_train + f_res:
                     f.write(line)
                 continue
             l = line.split(',')
             # 新的用户
-            if not line.startswith(pre_uid):
+            if l[0] > pre_uid:
                 cur_count += 1
                 pre_uid = l[0]
             # 根据时间分别存放
@@ -57,3 +58,36 @@ def sample_users(n, path_in, path_train, path_result):
                 f_train[cur_count/n].write(line)
     for f in f_train + f_res:
         f.close()
+
+
+
+
+
+import sys
+
+def _help():
+    print """
+    -h\tFor help messages
+    -c\tCount users in the original train user dataset
+    -s\tSort the original train user dataset by userid and time
+    -S\tSample the sorted train user dataset to 10 small dataset, each contains 1000 user
+    """
+
+def _sample():
+    sample_users(1000, TRAIN_USER_SORTED, TRAIN_USER_SAMPLES, ANSWER_SAMPLES)
+
+def _count():
+    print len(users_of_file(TRAIN_USER_SORTED))
+
+switches = {
+    '-h': _help,
+    '-c': _count,
+    '-s': sort_train_user,
+    '-S': _sample,
+
+}
+
+if len(sys.argv) == 2:
+    arg = sys.argv[1]
+    f = switches.get(arg, '-h')
+    f()
