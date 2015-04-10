@@ -82,6 +82,9 @@ def label_to_ans(path_label, path_ans):
     write_to_csv(path_ans, 'user_id,item_id', pairs, func=lambda x: x + '\n')
 
 
+
+
+
 import sys
 
 SAMPLE_N = 10
@@ -92,7 +95,7 @@ def _help():
     -a\tCast label datasets to answers
     -c\tCount users in the original train user dataset
     -s\tSort the original train user dataset by userid and time
-    -S\tSample the sorted train user dataset to 10 small dataset, each contains 1000 user
+    -m\tSample the sorted train user dataset to 10 small dataset, each contains 1000 user
     """
 
 def _sample():
@@ -112,11 +115,12 @@ switches = {
     '-a': _answer,
     '-c': _count,
     '-s': sort_train_user,
-    '-S': _sample,
-
+    '-m': _sample,
 }
 
 if len(sys.argv) == 2:
     arg = sys.argv[1]
     f = switches.get(arg, _help)
     f()
+else:
+    _help()

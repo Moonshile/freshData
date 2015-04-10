@@ -1,5 +1,17 @@
 #coding=utf-8
 
+from datetime import datetime, timedelta
+
+def time2str(time):
+    return datetime.strftime(time, '%Y-%m-%d %H')
+
+def str2time(str):
+    return datetime.strptime(str, '%Y-%m-%d %H')
+
+def str_timedelta_hours(s1, s2):
+    delta = str2time(s1) - str2time(s2)
+    return delta.days*24 + delta.seconds/3600
+
 def read_from_csv(path, func=lambda x: x.strip().split(',')):
     res = []
     head = None
