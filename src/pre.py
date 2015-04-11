@@ -4,7 +4,8 @@ import os
 
 from config import TRAIN_USER, TRAIN_ITEM, TRAIN_USER_SORTED,\
     TRAIN_USER_SAMPLES, LABEL_SAMPLES, ANSWER_SAMPLES,\
-    TRAN_USER_OFFLINE, LABEL_OFFLINE, ANSWER_OFFLINE
+    TRAN_USER_OFFLINE, LABEL_OFFLINE, ANSWER_OFFLINE,\
+    TRAIN_USER_PARTS
 from utils import read_from_csv, write_to_csv, sort_raw_data
 
 # 根据用户名、时间对原始数据集进行排序
@@ -32,8 +33,8 @@ def users_of_file(path):
     )
     return set(users)
 
-# 将已经排序的样本按照每n条记录为一个样本分为几个小样本
-def sample_users(n, path_in, path_train, path_result, user_count=10000):
+# 将已经排序的样本按照每n条记录为一个样本分为几个小样本，并分为训练集和验证集
+def sample_users_to_train_label(n, path_in, path_train, path_result, user_count=10000):
     from math import ceil
     sample_count = int(ceil(user_count/float(n)))
     pre_uid = '0000000000000000'
@@ -59,6 +60,30 @@ def sample_users(n, path_in, path_train, path_result, user_count=10000):
             else:
                 f_train[cur_count/n].write(line)
     for f in f_train + f_res:
+        f.close()
+
+# 将已经排序的样本按照每n条记录为一个样本分为几个小样本
+def sample_users(n, path_in, path_out, user_count=10000):
+    from math import ceil
+    sample_count = int(ceil(user_count/float(n)))
+    pre_uid = '0000000000000000'
+    cur_count = -2
+    fout = map(lambda x: open(path_out % x, 'w'), range(0, sample_count))
+    with open(path_in, 'r') as fin:
+        for line in fin:
+            # 第一行是表头
+            if cur_count == -2:
+                cur_count += 1
+                for f in fout:
+                    f.write(line)
+                continue
+            l = line.split(',')
+            # 新的用户
+            if l[0] > pre_uid:
+                cur_count += 1
+                pre_uid = l[0]
+            fout[cur_count/n].write(line)
+    for f in fout:
         f.close()
 
 # 获取目标Item子集
@@ -95,11 +120,14 @@ def _help():
     -a\tCast label datasets to answers
     -c\tCount users in the original train user dataset
     -s\tSort the original train user dataset by userid and time
-    -m\tSample the sorted train user dataset to 10 small dataset, each contains 1000 user
+    -m\tSample the sorted train user dataset to 10 small datasets, each contains 1000 user,
+      \tand then divide each of them into train dataset and label dataset
+    -d\tDivide the sorted train user dataset to 10 small datasets, each contains 1000 user,
+      \tthen do nothing
     """
 
 def _sample():
-    sample_users(10000/SAMPLE_N, TRAIN_USER_SORTED, TRAIN_USER_SAMPLES, LABEL_SAMPLES)
+    sample_users_to_train_label(10000/SAMPLE_N, TRAIN_USER_SORTED, TRAIN_USER_SAMPLES, LABEL_SAMPLES)
     gen_offline(TRAIN_USER_SORTED, TRAN_USER_OFFLINE, LABEL_OFFLINE)
 
 def _count():
@@ -110,12 +138,16 @@ def _answer():
         label_to_ans(LABEL_SAMPLES % i, ANSWER_SAMPLES % i)
     label_to_ans(LABEL_OFFLINE, ANSWER_OFFLINE)
 
+def _divide():
+    sample_users(10000/SAMPLE_N, TRAIN_USER_SORTED, TRAIN_USER_PARTS)
+
 switches = {
     '-h': _help,
     '-a': _answer,
     '-c': _count,
     '-s': sort_train_user,
     '-m': _sample,
+    '-d': _divide,
 }
 
 if len(sys.argv) == 2:
