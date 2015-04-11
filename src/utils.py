@@ -31,6 +31,8 @@ def write_to_csv(path, head, data, func=lambda x: ','.join(x) + '\n'):
 
 # 以answers为准计算predicts的F1值
 def compute_f1(predicts, answers):
+    if not predicts:
+        return (0, 0, 0)
     intersec = float(len(set(predicts)&set(answers)))
     p = intersec/len(predicts)
     r = intersec/len(answers)
@@ -48,3 +50,26 @@ def sort_raw_data(data):
     return sorted(data, 
         cmp=lambda x, y: cmp(x[-1], y[-1]) if cmp(x[0], y[0]) == 0 else cmp(x[0], y[0])
     )
+
+# 寻找最好的阈值，返回该阈值和结果集
+def find_theta(X, y, answers, quiet=True):
+    thetas = map(lambda x: .01*x, range(0, 101))
+    max_f1 = -1
+    max_theta = None
+    pre_res = None
+    for theta in thetas:
+        predict = []
+        for i in range(0, len(X)):
+            if y[i] > theta:
+                predict.append(','.join(map(lambda x : str(x), X[i][:2])))
+        (p, r, f1) = compute_f1(predict, answers)
+        if f1 > max_f1:
+            max_f1 = f1
+            max_theta = theta
+            pre_res = predict
+            if not quiet:
+                print 'Size: %d; scores: (%4f, %4f, %4f)'\
+                    % (len(predict), p, r, f1)
+        if len(predict) == 0:
+            break
+    return max_theta, pre_res
