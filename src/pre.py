@@ -6,7 +6,7 @@ from config import TRAIN_USER, TRAIN_ITEM, TRAIN_USER_SORTED,\
     TRAIN_USER_SAMPLES, LABEL_SAMPLES, ANSWER_SAMPLES,\
     TRAN_USER_OFFLINE, LABEL_OFFLINE, ANSWER_OFFLINE,\
     TRAIN_USER_PARTS
-from utils import read_from_csv, write_to_csv, sort_raw_data
+from utils import read_from_csv, write_to_csv, sort_raw_data, retrieve_item_ids
 
 # 根据用户名、时间对原始数据集进行排序
 # 对全部数据进行排序需要约5G的内存，小瘦机器请小心使用！！！
@@ -86,13 +86,6 @@ def sample_users(n, path_in, path_out, user_count=10000):
     for f in fout:
         f.close()
 
-# 获取目标Item子集
-def retrieve_item_ids():
-    (head, items) = read_from_csv(TRAIN_ITEM,
-        func=lambda x: x.split(',')[0]
-    )
-    return set(items)
-
 # 统计给定文件中的曾经发生过购买的user-item对，并去重后保存
 def label_to_ans(path_label, path_ans):
     items = retrieve_item_ids()
@@ -117,9 +110,10 @@ SAMPLE_N = 10
 def _help():
     print """
     -h\tFor help messages
+    -ALL\tFor do everything automatically
     -a\tCast label datasets to answers
     -c\tCount users in the original train user dataset
-    -s\tSort the original train user dataset by userid and time
+    -s\tSort the original train user dataset by userid and time, and cast time to integer
     -m\tSample the sorted train user dataset to 10 small datasets, each contains 1000 user,
       \tand then divide each of them into train dataset and label dataset
     -d\tDivide the sorted train user dataset to 10 small datasets, each contains 1000 user,
@@ -140,6 +134,12 @@ def _answer():
 
 def _divide():
     sample_users(10000/SAMPLE_N, TRAIN_USER_SORTED, TRAIN_USER_PARTS)
+
+def _all():
+    sort_train_user()
+    _sample()
+    _divide()
+    _answer()
 
 switches = {
     '-h': _help,

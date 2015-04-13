@@ -2,6 +2,8 @@
 
 from datetime import datetime, timedelta
 
+from config import TRAIN_ITEM
+
 def time2str(time):
     return datetime.strftime(time, '%Y-%m-%d %H')
 
@@ -51,8 +53,15 @@ def sort_raw_data(data):
         cmp=lambda x, y: cmp(x[-1], y[-1]) if cmp(x[0], y[0]) == 0 else cmp(x[0], y[0])
     )
 
+# 获取目标Item子集
+def retrieve_item_ids():
+    (head, items) = read_from_csv(TRAIN_ITEM,
+        func=lambda x: x.split(',')[0]
+    )
+    return set(items)
+
 # 寻找最好的阈值，返回该阈值和结果集
-def find_theta(X, y, answers, quiet=True):
+def find_theta(X, y, answers, item_ids, quiet=True):
     thetas = map(lambda x: .01*x, range(0, 101))
     max_f1 = -1
     max_theta = None
@@ -60,7 +69,7 @@ def find_theta(X, y, answers, quiet=True):
     for theta in thetas:
         predict = []
         for i in range(0, len(X)):
-            if y[i] > theta:
+            if y[i] > theta and str(X[i][1]) in item_ids:
                 predict.append(','.join(map(lambda x : str(x), X[i][:2])))
         (p, r, f1) = compute_f1(predict, answers)
         if f1 > max_f1:
@@ -73,3 +82,12 @@ def find_theta(X, y, answers, quiet=True):
         if len(predict) == 0:
             break
     return max_theta, pre_res
+
+# 返回得分最高的一定比例的数据
+def cut_with_count(X, y, item_ids, cut=0.001):
+    predict = []
+    for i in range(0, len(X)):
+        if str(X[i][1]) in item_ids:
+            predict.append([','.join(map(lambda x : str(x), X[i][:2])), y[i]])
+    predict = sorted(predict, cmp=lambda x, y: cmp(y[1], x[1]))
+    return map(lambda x: x[0], predict[:int(cut*len(predict))])

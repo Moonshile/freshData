@@ -19,6 +19,7 @@ PREDICT = '../data/tianchi_mobile_recommendation_predict.csv'
 TRAIN_USER_SORTED = '../data/tianchi_mobile_recommend_train_user_sorted.csv'
 TRAIN_USER_PARTS = '../data/parts/part_%d.csv'
 FEATURE = '../data/feature.csv'
+FEATURE_PARTS = '../data/parts/feature_%d.csv'
 
 # 线下调试模型所用的原始训练集和结果集
 TRAN_USER_OFFLINE = '../data/offline/train_user.csv'
