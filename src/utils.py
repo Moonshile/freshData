@@ -1,6 +1,7 @@
 #coding=utf-8
 
 from datetime import datetime, timedelta
+from heapq import heappush, heappop
 
 from config import TRAIN_ITEM
 
@@ -83,11 +84,51 @@ def find_theta(X, y, answers, item_ids, quiet=True):
             break
     return max_theta, pre_res
 
+class TopResult(object):
+
+    def __init__(self, size):
+        super(TopResult, self).__init__()
+        self.size = size
+        self.heap = []
+
+    def push(self, x):
+        to_push = x
+        if len(self.heap) == self.size:
+            x_min = self.pop()
+            if cmp(x_min, x) > 0:
+                to_push = x_min
+        heappush(self.heap, to_push)
+
+    def pop(self):
+        heappop(self.heap)
+
+    def get(self):
+        return self.heap
+
+    def push_many(self, X, y):
+        for i in range(0, len(y)):
+            element = (y[i], X[i])
+            self.push(element)
+
+    def get_many(self):
+        res = []
+        for (y, x) in self.heap:
+            res.append(x)
+        return res
+
 # 返回得分最高的一定比例的数据
 def cut_with_count(X, y, item_ids, cut=0.001):
+    """
     predict = []
     for i in range(0, len(X)):
         if str(X[i][1]) in item_ids:
             predict.append([','.join(map(lambda x : str(x), X[i][:2])), y[i]])
     predict = sorted(predict, cmp=lambda x, y: cmp(y[1], x[1]))
-    return map(lambda x: x[0], predict[:int(cut*len(predict))])
+    return map(lambda x: x[0], predict[:int(cut*len(y))])
+    """
+    heap = TopResult(int(len(y)*cut))
+    for i in range(0, len(X)):
+        if str(X[i][1]) in item_ids:
+            heap.push((y[i], ','.join(map(lambda x : str(x), X[i][:2]))))
+    return heap.get_many()
+    #"""
