@@ -34,6 +34,9 @@ ANSWER_SAMPLES = '../data/offline/samples/answer_%d.csv'
 PREDICT_SAMPLES = '../data/offline/samples/predict_%d.csv'
 FEATURE_SAMPLES = '../data/offline/samples/feature_%d.csv'
 
+# constants
+END_TIME = '2014-12-19 00'
+
 # 需要进行的动作
 
 import os

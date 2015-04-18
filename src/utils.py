@@ -84,6 +84,7 @@ def find_theta(X, y, answers, item_ids, quiet=True):
             break
     return max_theta, pre_res
 
+# 使用堆排序选择得分最高的N个记录
 class TopResult(object):
 
     def __init__(self, size):
@@ -95,7 +96,7 @@ class TopResult(object):
         to_push = x
         if len(self.heap) == self.size:
             x_min = self.pop()
-            if cmp(x_min, x) > 0:
+            if cmp(x_min, x) >= 0:
                 to_push = x_min
         heappush(self.heap, to_push)
 
@@ -117,18 +118,31 @@ class TopResult(object):
         return res
 
 # 返回得分最高的一定比例的数据
-def cut_with_count(X, y, item_ids, cut=0.001):
-    """
-    predict = []
-    for i in range(0, len(X)):
-        if str(X[i][1]) in item_ids:
-            predict.append([','.join(map(lambda x : str(x), X[i][:2])), y[i]])
-    predict = sorted(predict, cmp=lambda x, y: cmp(y[1], x[1]))
-    return map(lambda x: x[0], predict[:int(cut*len(y))])
-    """
-    heap = TopResult(int(len(y)*cut))
+def cut_with_count(X, y, item_ids, count):
+    heap = TopResult(count)
     for i in range(0, len(X)):
         if str(X[i][1]) in item_ids:
             heap.push((y[i], ','.join(map(lambda x : str(x), X[i][:2]))))
     return heap.get_many()
-    #"""
+
+# 以一定的权重融合多个模型
+class Chaos(object):
+
+    def __init__(self, X):
+        super(Chaos, self).__init__()
+        self.X = X
+        self.ys = []
+
+    def add_y(self, weight, y):
+        self.ys.append((weight, y))
+
+    def get(self, item_ids, cut=0.001):
+        merged_y = None
+        for w, y in self.ys:
+            if not merged_y:
+                merged_y = [0.]*len(y)
+            for i in range(0, len(y)):
+                merged_y[i] += w*y[i]
+        return cut_with_count(self.X, y, item_ids, cut)
+
+
