@@ -1,5 +1,6 @@
 data/
-src/d*
+data-*/
+src/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
